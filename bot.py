@@ -11,10 +11,11 @@ bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.json
+    print("Received Data:", data)  # 👈 Debugging ke liye print
+
     if data:
         signal = data.get('signal', 'No Signal')
 
-        # 🚨 Proper Signal Alerts Logic
         if signal == 'BUY':
             bot.send_message(CHAT_ID, "**Upstox Signal Alert:** 📈 Buy Signal")
         elif signal == 'SELL':
@@ -23,6 +24,3 @@ def webhook():
             bot.send_message(CHAT_ID, "**Upstox Signal Alert:** 🚫 No Signal")
     
     return "Success", 200
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
