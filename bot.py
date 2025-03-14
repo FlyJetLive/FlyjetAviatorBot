@@ -13,7 +13,15 @@ def webhook():
     data = request.json
     if data:
         signal = data.get('signal', 'No Signal')
-        bot.send_message(CHAT_ID, f"📊 **Upstox Signal Alert:** {signal}")
+
+        # 🚨 Proper Signal Alerts Logic
+        if signal == 'BUY':
+            bot.send_message(CHAT_ID, "**Upstox Signal Alert:** 📈 Buy Signal")
+        elif signal == 'SELL':
+            bot.send_message(CHAT_ID, "**Upstox Signal Alert:** 📉 Sell Signal")
+        else:
+            bot.send_message(CHAT_ID, "**Upstox Signal Alert:** 🚫 No Signal")
+    
     return "Success", 200
 
 if __name__ == "__main__":
