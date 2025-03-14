@@ -1,6 +1,7 @@
 from flask import Flask, request
 import telebot
 import requests
+import os  # 👈 Port bind ke liye import
 
 app = Flask(__name__)
 
@@ -24,3 +25,7 @@ def webhook():
             bot.send_message(CHAT_ID, "**Upstox Signal Alert:** 🚫 No Signal")
     
     return "Success", 200
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # Render pe proper port binding
+    app.run(host='0.0.0.0', port=port)
