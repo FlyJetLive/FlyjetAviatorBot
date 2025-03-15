@@ -7,8 +7,8 @@ from upstox_api.api import Upstox, OrderType, TransactionType  # 👈 Upstox API
 app = Flask(__name__)
 
 # Configuration
-TELEGRAM_BOT_TOKEN = '8046226594:AAHvoxw8pVdLoXGa9cDCnF-kfS5TBOmV_Fw'
-CHAT_ID = '6536224568'
+TELEGRAM_BOT_TOKEN = '8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI'
+CHAT_ID = '-1002680639378'
 UPSTOX_API_KEY = '89f0ab80-c2ed-4b19-99c1-6d42f6b1e668'
 UPSTOX_API_SECRET = 'fvuqmloiwn'
 UPSTOX_ACCESS_TOKEN = 'YOUR_UPSTOX_ACCESS_TOKEN'  # ⚠️ Yahan naye token dalna hai
