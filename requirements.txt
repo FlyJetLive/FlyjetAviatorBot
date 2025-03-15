@@ -2,3 +2,4 @@ flask
 telebot
 requests
 websockets
+gunicorn
