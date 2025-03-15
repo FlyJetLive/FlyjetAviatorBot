@@ -51,18 +51,20 @@ async def aviator_signal():
 def home():
     return "Flyjet Aviator Bot is Running!"
 
-# Webhook Route for Testing Signals (Optional)
 @app.route('/aviator', methods=['POST'])
-def webhook():
-    data = request.get_json()
-    signal = data.get("signal", "No Signal")
-    bot.send_message(CHAT_ID, f"📊 **Aviator Signal Alert:** {signal}")
-    return "Signal Received", 200
+def aviator_webhook():
+    try:
+        data = request.get_json()
+        if not data:
+            return "No data received", 400
+        
+        signal = data.get('signal')
+        if signal:
+            bot.send_message(CHAT_ID, f"📊 **Aviator Signal Alert:** {signal}")
+            return "✅ Signal Sent Successfully", 200
+        else:
+            return "❗ No Signal Found", 400
 
-# Start the WebSocket connection
-async def main():
-    await aviator_signal()
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Default port 5000
-    app.run(host='0.0.0.0', port=port)
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return "❌ Internal Server Error", 500
