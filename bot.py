@@ -6,7 +6,7 @@ from flask import Flask, request
 from telebot import TeleBot
 
 # Telegram Bot Configuration
-TELEGRAM_BOT_TOKEN = os.getenv("8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI")
 CHAT_ID = int(os.getenv("CHAT_ID", "-4669657171"))
 
 
