@@ -1,20 +1,20 @@
+import os
 import asyncio
 import websockets
 import json
-import os
 from flask import Flask, request
-from telegram import Bot
-
-# Flask App for Render Deployment
-app = Flask(__name__)
+from telebot import TeleBot
 
 # Telegram Bot Configuration
-BOT_TOKEN = os.getenv("8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI")
+TELEGRAM_BOT_TOKEN = os.getenv("8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI")
 CHAT_ID = os.getenv("1002680639378")
 
-bot = Bot(token=BOT_TOKEN)
+bot = TeleBot(TELEGRAM_BOT_TOKEN)
 
-# WebSocket URL for Aviator Game
+# Flask App Setup
+app = Flask(__name__)
+
+# WebSocket URL (Aviator API URL)
 WS_URL = "wss://game9.apac.spribegaming.com/BlueBox/websocket"
 
 # Signal Prediction Logic
@@ -29,7 +29,7 @@ async def aviator_signal():
                 message = await ws.recv()
                 data = json.loads(message)
 
-                # Example data extraction (modify as per data format)
+                # Example data extraction (Modify as per data format)
                 if 'crash_point' in data:
                     crash_point = data['crash_point']
 
@@ -39,29 +39,31 @@ async def aviator_signal():
                     # Send signal when 10 predictions are ready
                     if len(signals) == 10:
                         signal_text = "\n".join(signals)
-                        await bot.send_message(CHAT_ID, f"🚨 **Aviator Signals** 🚨\n{signal_text}")
+                        bot.send_message(CHAT_ID, f"🚨 **Aviator Signals** 🚨\n{signal_text}")
                         signals.clear()  # Clear the list for new predictions
 
             except Exception as e:
                 print(f"❌ Error: {e}")
                 await asyncio.sleep(5)  # Retry after 5 seconds
 
+# Flask Route for Testing
+@app.route('/')
+def home():
+    return "Flyjet Aviator Bot is Running!"
+
+# Webhook Route for Testing Signals (Optional)
 @app.route('/aviator', methods=['POST'])
-def manual_signal():
-    try:
-        data = request.json
-        signal = data.get('signal', 'No Signal')
-        bot.send_message(CHAT_ID, f"📊 **Manual Signal:** {signal}")
-        return "Success", 200
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        return "Error", 500
+def webhook():
+    data = request.get_json()
+    signal = data.get("signal", "No Signal")
+    bot.send_message(CHAT_ID, f"📊 **Aviator Signal Alert:** {signal}")
+    return "Signal Received", 200
 
 # Start the WebSocket connection
 async def main():
     await aviator_signal()
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.create_task(main())
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+    port = int(os.environ.get("PORT", 5000))
+    asyncio.run(main())
+    app.run(host='0.0.0.0', port=port, threaded=True)
