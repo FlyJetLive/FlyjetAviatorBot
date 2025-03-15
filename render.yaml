@@ -1,14 +1,13 @@
 services:
-  - type: web    # Yeh line add karna mandatory hai
-    name: FlyjetAviatorBot
-    env: python   # Environment define karna jaroori hai
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python bot.py"
-    plan: free
+  - name: FlyjetAviatorBot
     envVars:
       - key: BOT_TOKEN
-        sync: false
+        value: 8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI
       - key: CHAT_ID
-        sync: false
+        value: -4669657171
       - key: PORT
         value: 5000
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    plan: free
+
