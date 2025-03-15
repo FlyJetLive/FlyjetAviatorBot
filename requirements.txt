@@ -1,4 +1,4 @@
 flask
 telebot
 requests
-upstox-api
+websockets
