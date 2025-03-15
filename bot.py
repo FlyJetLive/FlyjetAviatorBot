@@ -7,7 +7,7 @@ from telebot import TeleBot
 
 # Telegram Bot Configuration
 TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN", "8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI")
-CHAT_ID = int(os.getenv("-4669657171"))
+CHAT_ID = int(os.getenv("CHAT_ID", "-4669657171"))
 
 bot = TeleBot(TELEGRAM_BOT_TOKEN)
 
@@ -57,7 +57,7 @@ def aviator_webhook():
         data = request.get_json()
         if not data:
             return "No data received", 400
-        
+
         signal = data.get('signal')
         if signal:
             bot.send_message(CHAT_ID, f"📊 **Aviator Signal Alert:** {signal}")
@@ -68,3 +68,8 @@ def aviator_webhook():
     except Exception as e:
         print(f"❌ Error: {e}")
         return "❌ Internal Server Error", 500
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    asyncio.run(aviator_signal())
+
