@@ -7,7 +7,7 @@ from telebot import TeleBot
 
 # Telegram Bot Configuration
 TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN", "8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI")
-CHAT_ID = os.getenv("1002680639378")
+CHAT_ID = os.getenv("-1002680639378")
 
 bot = TeleBot(TELEGRAM_BOT_TOKEN)
 
