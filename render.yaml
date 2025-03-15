@@ -2,12 +2,11 @@ services:
   - name: FlyjetAviatorBot
     envVars:
       - key: BOT_TOKEN
-        value: 8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI
+        sync: false
       - key: CHAT_ID
-        value: -4669657171
+        sync: false
       - key: PORT
         value: 5000
     buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
     plan: free
-
