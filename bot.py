@@ -24,7 +24,7 @@ user_data = {}
 def send_welcome(message):
     bot.send_message(
         message.chat.id,
-        "🚀 *Flyjet Aviator Bot is Active!*
+        "🚀 *Flyjet Aviator Bot is Active!*"
 Send `/setuid <Your_UID>` to start receiving signals.",
         parse_mode='Markdown'
     )
