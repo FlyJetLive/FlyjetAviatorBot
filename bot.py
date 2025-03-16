@@ -3,6 +3,7 @@ from telebot import TeleBot, types
 from flask import Flask, request
 import os
 import threading
+import time
 
 app = Flask(__name__)
 
@@ -17,11 +18,13 @@ user_data = {}
 def send_signals_to_users(crash_point):
     for chat_id in user_data.keys():
         predicted_crash = round(crash_point * 1.3, 2)  # Example prediction logic
-        bot.send_message(
-            chat_id,
-            f"💥 **Crash Point:** {crash_point}x | 🧠 **Prediction:** {predicted_crash}x",
-            parse_mode='Markdown'
-        )
+        for i in range(10):  # 10 signals instantly
+            bot.send_message(
+                chat_id,
+                f"💥 **Crash Point:** {crash_point}x | 🧠 **Prediction:** {predicted_crash}x",
+                parse_mode='Markdown'
+            )
+            time.sleep(1)  # 1-second delay between signals for smooth delivery
 
 # Command Handlers
 @bot.message_handler(commands=['start'])
@@ -29,7 +32,7 @@ def send_welcome(message):
     bot.send_message(
         message.chat.id,
         "🚀 *Flyjet Aviator Bot is Active!*\n"
-        "Send `/setuid <Your_UID>` to start receiving signals.",
+"Send `/setuid <Your_UID>` to start receiving signals.",
         parse_mode='Markdown'
     )
 
@@ -45,7 +48,6 @@ def set_uid(message):
         )
     except IndexError:
         bot.send_message(message.chat.id, "❗ Please provide a valid UID. Example: `/setuid 123456`", parse_mode='Markdown')
-
 
 @app.route(f'/{TELEGRAM_BOT_TOKEN}', methods=['POST'])
 def webhook():
@@ -67,8 +69,8 @@ def home():
     return "Flyjet Aviator Bot is Running!"
 
 if __name__ == "__main__":
-    print("Bot Token:", TELEGRAM_BOT_TOKEN)  # Is line ko temporarily add karo
-    
+    print("Bot Token:", TELEGRAM_BOT_TOKEN)  # Debugging ke liye
+
     # Delete Old Webhook Before Starting New One
     import requests
     requests.get(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteWebhook")
