@@ -16,17 +16,27 @@ bot = TeleBot(TELEGRAM_BOT_TOKEN)
 
 # Scraping Function
 def get_crash_point():
-    url = "https://aviator-next.spribegaming.com/?user=10500014800067&token=31333133325F6D..."
-    headers = {"User-Agent": "Mozilla/5.0"}  # Avoid bot detection
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
-    # Crash Point Extraction (Selector needs adjustment as per HTML structure)
-    crash_point_element = soup.find('div', class_='crash-point')
-    if crash_point_element:
-        crash_point = float(crash_point_element.text.strip().replace('x', ''))
-        return crash_point
-    return None
+    try:
+        url = "https://aviator-next.spribegaming.com/?user=10500014800067&token=31333133325F6D..."
+        headers = {"User-Agent": "Mozilla/5.0"}  # Avoid bot detection
+        response = requests.get(url, headers=headers, timeout=10)
+        
+        if response.status_code != 200:
+            print(f"❗ Error: {response.status_code}")
+            return None
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        crash_point_element = soup.find('div', class_='crash-point')  
+        if crash_point_element:
+            crash_point = float(crash_point_element.text.strip().replace('x', ''))
+            return crash_point
+        else:
+            print("❗ Crash Point Not Found - Selector Issue")
+            return None
+    except Exception as e:
+        print(f"❌ Error during scraping: {e}")
+        return None
 
 # Prediction Logic
 def predict_crash_point(history):
@@ -68,3 +78,4 @@ if __name__ == "__main__":
     threading.Thread(target=run_bot).start()  # Web scraping parallel run karega
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
