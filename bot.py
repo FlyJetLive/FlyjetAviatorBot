@@ -81,8 +81,6 @@ def run_bot():
                     crash_history[uid] = []
 
                 latest_crash_point = get_crash_point(uid)
-                print(f"🟡 Latest Crash Point for UID {uid}: {latest_crash_point}")
-
                 if latest_crash_point:
                     crash_history[uid].append(latest_crash_point)
                     if len(crash_history[uid]) >= 10:
@@ -109,9 +107,9 @@ if __name__ == "__main__":
     # Webhook Reset to Avoid Conflict
     requests.get(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteWebhook")
 
-    # Start threads
+    # Start threads in async mode
     threading.Thread(target=run_bot).start()
-    threading.Thread(target=bot.polling, kwargs={'timeout': 60, 'none_stop': True}).start()
+    threading.Thread(target=bot.polling, kwargs={'none_stop': True, 'timeout': 90}).start()
 
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
