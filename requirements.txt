@@ -2,4 +2,5 @@ flask
 telebot
 requests
 websockets
+websocket-client
 gunicorn
