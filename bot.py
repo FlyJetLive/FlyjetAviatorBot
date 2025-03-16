@@ -1,8 +1,9 @@
-from websocket_handler import connect_websocket
 from telebot import TeleBot, types
 from flask import Flask, request
 import os
 import threading
+import requests
+from bs4 import BeautifulSoup
 import time
 
 app = Flask(__name__)
@@ -14,24 +15,37 @@ bot = TeleBot(TELEGRAM_BOT_TOKEN)
 # User Data
 user_data = {}
 
-# Signal Sending Logic
-def send_signals_to_users(crash_point):
-    for chat_id in user_data.keys():
-        predicted_crash = round(crash_point * 1.3, 2)  # Example prediction logic
-        for i in range(10):  # 10 signals instantly
-            bot.send_message(
-                chat_id,
-                f"💥 **Crash Point:** {crash_point}x | 🧠 **Prediction:** {predicted_crash}x",
-                parse_mode='Markdown'
-            )
-            time.sleep(1)  # 1-second delay between signals for smooth delivery
+# Signal Extraction Logic
+def get_crash_point():
+    url = "https://damangames.bet/"
+    try:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        crash_point = float(soup.find('div', class_='crash-point').text.strip())
+        return crash_point
+    except Exception as e:
+        print(f"Error fetching crash point: {e}")
+        return None
+
+def send_signals_to_users():
+    crash_point = get_crash_point()
+    if crash_point:
+        for chat_id in user_data.keys():
+            predicted_crash = round(crash_point * 1.3, 2)
+            for i in range(10):  # 10 signals instantly
+                bot.send_message(
+                    chat_id,
+                    f"💥 **Crash Point:** {crash_point}x | 🧠 **Prediction:** {predicted_crash}x",
+                    parse_mode='Markdown'
+                )
+                time.sleep(1)
 
 # Command Handlers
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.send_message(
         message.chat.id,
-        "🚀 *Flyjet Aviator Bot is Active!*\n"
+        "🚀 *Flyjet Aviator Bot is Active!*"
 "Send `/setuid <Your_UID>` to start receiving signals.",
         parse_mode='Markdown'
     )
@@ -75,8 +89,8 @@ if __name__ == "__main__":
     import requests
     requests.get(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteWebhook")
 
-    # Start WebSocket in Thread
-    threading.Thread(target=lambda: connect_websocket(send_signals_to_users)).start()
+    # Start Signal Generation Thread
+    threading.Thread(target=send_signals_to_users).start()
 
     # Start Flask App
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
