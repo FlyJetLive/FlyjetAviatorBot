@@ -77,7 +77,7 @@ def home():
 def aviator_webhook():
     try:
         data = request.get_json(silent=True)
-        print("Received Data:", data)
+        print("Received Data:", data)  # ✅ Debugging ke liye data print karega
 
         if not data:
             return "❗ No data received or invalid format", 400
