@@ -13,18 +13,31 @@ CHAT_ID = -4669657171
 
 bot = TeleBot(TELEGRAM_BOT_TOKEN)
 
+# Crash History Data (From Screenshot)
+crash_history = [
+    2.39, 1.72, 6.61, 2.59, 1.19, 1.87, 1.09, 2.82, 1.39,
+    2.45, 1.83, 5.02, 2.88, 2.02, 1.31, 1.31, 1.49, 2.74,
+    1.18, 1.41, 8.63, 1.23, 4.80, 4.32, 1.63, 1.57
+]
+
+# ================= Crash Point Prediction Logic ================= #
+def predict_crash_point(history):
+    avg_crash_point = sum(history) / len(history)
+    prediction = round(random.uniform(avg_crash_point * 0.8, avg_crash_point * 1.5), 2)
+    return prediction
+
 # ================= WebSocket Data Handler ================= #
 def on_message(ws, message):
     try:
         data = json.loads(message)
         print("Received Data:", data)
 
-        # Crash point prediction logic
-        predicted_crash_point = round(random.uniform(1.5, 10.0), 2)
-
-        # Signal Logic
         if 'crash_point' in data:
-            crash_point = data['crash_point']
+            crash_point = float(data['crash_point'])
+            crash_history.append(crash_point)
+
+            predicted_crash_point = predict_crash_point(crash_history[-20:])
+
             bot.send_message(
                 CHAT_ID,
                 f"💥 **Crash Point:** {crash_point}x\n"
@@ -70,7 +83,7 @@ def aviator_webhook():
             return "❗ No data received or invalid format", 400
         
         signal = data.get('signal')
-        predicted_crash_point = round(random.uniform(1.5, 10.0), 2)
+        predicted_crash_point = predict_crash_point(crash_history[-20:])
 
         if signal:
             bot.send_message(
@@ -90,4 +103,3 @@ if __name__ == "__main__":
     threading.Thread(target=start_websocket).start()  # WebSocket parallel run hoga
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-    
