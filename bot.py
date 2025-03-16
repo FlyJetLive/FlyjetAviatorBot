@@ -46,6 +46,13 @@ def set_uid(message):
     except IndexError:
         bot.send_message(message.chat.id, "❗ Please provide a valid UID. Example: `/setuid 123456`", parse_mode='Markdown')
 
+
+@app.route(f'/{TELEGRAM_BOT_TOKEN}', methods=['POST'])
+def webhook():
+    update = types.Update.de_json(request.stream.read().decode("utf-8"))
+    bot.process_new_updates([update])
+    return "OK", 200
+
 # Webhook Setup
 @app.route('/setwebhook', methods=['GET'])
 def set_webhook():
@@ -63,6 +70,9 @@ if __name__ == "__main__":
     # Delete Old Webhook Before Starting New One
     import requests
     requests.get(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteWebhook")
+
+    # Set New Webhook
+    requests.get(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/setWebhook?url=https://flyjet-aviator.onrender.com/{TELEGRAM_BOT_TOKEN}")
 
     # Start WebSocket in Thread
     threading.Thread(target=lambda: connect_websocket(send_signals_to_users)).start()
