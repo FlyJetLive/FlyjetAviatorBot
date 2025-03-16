@@ -5,15 +5,11 @@ import random
 import time
 from flask import Flask, request
 import os
-import threading
 
 app = Flask(__name__)
 
 # Telegram Bot Setup
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI")
-if not TELEGRAM_BOT_TOKEN:
-    raise ValueError("❗ TELEGRAM_BOT_TOKEN environment variable is missing!")
-
 bot = TeleBot(TELEGRAM_BOT_TOKEN)
 
 # User data storage for UID mapping
@@ -71,7 +67,7 @@ def predict_crash_point(history):
     return round(random.uniform(avg_point * 0.8, avg_point * 1.5), 2)
 
 # Main Signal Logic
-def run_bot():
+def send_signals():
     crash_history = {}
 
     while True:
@@ -98,18 +94,31 @@ def run_bot():
             print(f"❌ Error in bot loop: {e}")
             time.sleep(30)
 
-# Flask Route for Render Port Issue Fix
+# Flask Route for Webhook
+@app.route('/' + TELEGRAM_BOT_TOKEN, methods=['POST'])
+def webhook():
+    json_str = request.get_data().decode('UTF-8')
+    update = types.Update.de_json(json_str)
+    bot.process_new_updates([update])
+    return "Success", 200
+
+# Webhook Setup
+@app.route('/setwebhook', methods=['GET'])
+def set_webhook():
+    webhook_url = f"https://flyjet-aviator.onrender.com/{TELEGRAM_BOT_TOKEN}"
+    if bot.set_webhook(url=webhook_url):
+        return f"✅ Webhook set successfully at {webhook_url}"
+    else:
+        return "❌ Webhook setup failed", 400
+
+# Home Route
 @app.route('/')
 def home():
     return "Flyjet Aviator Bot is Running!"
 
 if __name__ == "__main__":
-    # Webhook Reset to Avoid Conflict
+    # Delete Old Webhook Before Starting New One
     requests.get(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteWebhook")
 
-    # Start threads in async mode
-    threading.Thread(target=run_bot).start()
-    threading.Thread(target=bot.polling, kwargs={'none_stop': True, 'timeout': 90}).start()
-
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    # Start Flask App
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
