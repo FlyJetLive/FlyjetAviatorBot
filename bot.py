@@ -82,7 +82,10 @@ def home():
     return "Flyjet Aviator Bot is Running!"
 
 if __name__ == "__main__":
-    # Threading ko sahi manage karne ke liye change
+    # Webhook hata ke ensure karo ki duplicate instance ka issue na ho
+    bot.remove_webhook()
+
+    # Threading ko sahi manage karne ke liye fix
     threading.Thread(target=run_bot, daemon=True).start()  
     threading.Thread(target=lambda: bot.infinity_polling()).start()  
 
