@@ -47,12 +47,11 @@ def set_uid(message):
         bot.send_message(message.chat.id, "❗ Please provide a valid UID. Example: `/setuid 123456`", parse_mode='Markdown')
 
 
-@app.route(f'/{os.getenv("TELEGRAM_BOT_TOKEN")}', methods=['POST'])
+@app.route(f'/{TELEGRAM_BOT_TOKEN}', methods=['POST'])
 def webhook():
-    if request.method == "POST":
-        update = types.Update.de_json(request.stream.read().decode("utf-8"))
-        bot.process_new_updates([update])
-        return "OK", 200
+    update = types.Update.de_json(request.stream.read().decode("utf-8"))
+    bot.process_new_updates([update])
+    return "OK", 200
 
 # Webhook Setup
 @app.route('/setwebhook', methods=['GET'])
