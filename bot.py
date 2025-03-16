@@ -81,6 +81,8 @@ def run_bot():
                     crash_history[uid] = []
 
                 latest_crash_point = get_crash_point(uid)
+                print(f"🟡 Latest Crash Point for UID {uid}: {latest_crash_point}")
+
                 if latest_crash_point:
                     crash_history[uid].append(latest_crash_point)
                     if len(crash_history[uid]) >= 10:
@@ -89,10 +91,7 @@ def run_bot():
                             predicted_crash = predict_crash_point(crash_history[uid][-10:])
                             signals += f"💥 **Crash Point:** {point}x | 🧠 **Prediction:** {predicted_crash}x\n"
 
-                        try:
-                            bot.send_message(chat_id, signals)
-                        except Exception as e:
-                            print(f"❗ Error sending message to {chat_id}: {e}")
+                        bot.send_message(chat_id, signals)
                 else:
                     print(f"❗ No crash point found for UID {uid}")
 
@@ -112,7 +111,7 @@ if __name__ == "__main__":
 
     # Start threads
     threading.Thread(target=run_bot).start()
-    threading.Thread(target=bot.polling, kwargs={'allowed_updates': ['message']}).start()
+    threading.Thread(target=bot.polling, kwargs={'timeout': 60, 'none_stop': True}).start()
 
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
