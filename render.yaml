@@ -9,4 +9,4 @@ services:
         value: 5000
     buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
-    plan: starter  # Free ke jagah Starter ya Standard likho
+    plan: starter
