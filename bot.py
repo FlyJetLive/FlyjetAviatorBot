@@ -1,10 +1,10 @@
-import requests
-from bs4 import BeautifulSoup
+import websocket
+import json
+import threading
 from telebot import TeleBot, types
-import random
-import time
 from flask import Flask, request
 import os
+import requests
 
 app = Flask(__name__)
 
@@ -14,6 +14,9 @@ bot = TeleBot(TELEGRAM_BOT_TOKEN)
 
 # User data storage for UID mapping
 user_data = {}
+
+# WebSocket URL
+WEBSOCKET_URL = "wss://game9.apac.spribegaming.com/BlueBox/websocket"
 
 # Command Handler for /start
 @bot.message_handler(commands=['start'])
@@ -39,60 +42,46 @@ def set_uid(message):
     except IndexError:
         bot.send_message(message.chat.id, "❗ Please provide a valid UID. Example: `/setuid 123456`", parse_mode='Markdown')
 
-# Scraping Function
-def get_crash_point(uid):
+# WebSocket Data Handler
+def on_message(ws, message):
     try:
-        url = f"https://aviator-next.spribegaming.com/?user={uid}&token=31333133325F6D..."
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=10)
-
-        soup = BeautifulSoup(response.text, 'html.parser')
-        crash_point_element = soup.find('div', class_='crash-point')
-
-        if crash_point_element:
-            crash_point = float(crash_point_element.text.strip().replace('x', ''))
-            return crash_point
-        else:
-            print(f"❗ Crash Point Not Found for UID {uid}")
-            return None
+        data = json.loads(message)
+        if 'crashPoint' in data:
+            crash_point = float(data['crashPoint'])
+            send_signals_to_users(crash_point)
     except Exception as e:
-        print(f"❌ Error during scraping for UID {uid}: {e}")
-        return None
+        print(f"❌ Error in WebSocket message processing: {e}")
 
-# Prediction Logic
-def predict_crash_point(history):
-    if len(history) < 5:
-        return round(random.uniform(1.5, 3.0), 2)
-    avg_point = sum(history) / len(history)
-    return round(random.uniform(avg_point * 0.8, avg_point * 1.5), 2)
+def on_error(ws, error):
+    print(f"❗ WebSocket Error: {error}")
 
-# Main Signal Logic
-def send_signals():
-    crash_history = {}
+def on_close(ws, close_status_code, close_msg):
+    print("🔌 WebSocket Closed. Reconnecting in 5 seconds...")
+    threading.Timer(5, connect_websocket).start()
 
-    while True:
-        try:
-            for chat_id, uid in user_data.items():
-                if uid not in crash_history:
-                    crash_history[uid] = []
+def on_open(ws):
+    print("✅ WebSocket Connected Successfully!")
 
-                latest_crash_point = get_crash_point(uid)
-                if latest_crash_point:
-                    crash_history[uid].append(latest_crash_point)
-                    if len(crash_history[uid]) >= 10:
-                        signals = ""
-                        for point in crash_history[uid][-10:]:
-                            predicted_crash = predict_crash_point(crash_history[uid][-10:])
-                            signals += f"💥 **Crash Point:** {point}x | 🧠 **Prediction:** {predicted_crash}x\n"
+# Send Signals to All Users
+def send_signals_to_users(crash_point):
+    for chat_id in user_data.keys():
+        predicted_crash = round(crash_point * 1.3, 2)  # Example prediction logic
+        bot.send_message(
+            chat_id,
+            f"💥 **Crash Point:** {crash_point}x | 🧠 **Prediction:** {predicted_crash}x",
+            parse_mode='Markdown'
+        )
 
-                        bot.send_message(chat_id, signals)
-                else:
-                    print(f"❗ No crash point found for UID {uid}")
-
-            time.sleep(10)
-        except Exception as e:
-            print(f"❌ Error in bot loop: {e}")
-            time.sleep(30)
+# WebSocket Connection
+def connect_websocket():
+    ws = websocket.WebSocketApp(
+        WEBSOCKET_URL,
+        on_message=on_message,
+        on_error=on_error,
+        on_close=on_close
+    )
+    ws.on_open = on_open
+    ws.run_forever()
 
 # Flask Route for Webhook
 @app.route('/' + TELEGRAM_BOT_TOKEN, methods=['POST'])
@@ -119,6 +108,9 @@ def home():
 if __name__ == "__main__":
     # Delete Old Webhook Before Starting New One
     requests.get(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteWebhook")
+
+    # Start WebSocket Thread
+    threading.Thread(target=connect_websocket).start()
 
     # Start Flask App
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
