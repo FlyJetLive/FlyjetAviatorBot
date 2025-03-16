@@ -10,7 +10,7 @@ import threading
 app = Flask(__name__)
 
 # Telegram Bot Setup
-TELEGRAM_BOT_TOKEN = os.getenv("8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI")
 if not TELEGRAM_BOT_TOKEN:
     raise ValueError("❗ TELEGRAM_BOT_TOKEN environment variable is missing!")
 
@@ -22,10 +22,10 @@ user_data = {}
 # Command Handler for /start
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(
-        message,
-        "🚀 *Flyjet Aviator Bot is Active!*\n"
-        "Send `/setuid <Your_UID>` to start receiving signals.",
+    bot.send_message(
+        message.chat.id,
+        "🚀 *Flyjet Aviator Bot is Active!*
+Send `/setuid <Your_UID>` to start receiving signals.",
         parse_mode='Markdown'
     )
 
@@ -35,13 +35,13 @@ def set_uid(message):
     try:
         uid = message.text.split()[1]
         user_data[message.chat.id] = uid
-        bot.reply_to(
-            message,
+        bot.send_message(
+            message.chat.id,
             f"✅ UID set successfully!\nNow you'll receive signals for UID: `{uid}`",
             parse_mode='Markdown'
         )
     except IndexError:
-        bot.reply_to(message, "❗ Please provide a valid UID. Example: `/setuid 123456`", parse_mode='Markdown')
+        bot.send_message(message.chat.id, "❗ Please provide a valid UID. Example: `/setuid 123456`", parse_mode='Markdown')
 
 # Scraping Function
 def get_crash_point(uid):
@@ -67,15 +67,8 @@ def get_crash_point(uid):
 def predict_crash_point(history):
     if len(history) < 5:
         return round(random.uniform(1.5, 3.0), 2)
-
     avg_point = sum(history) / len(history)
-    trend_factor = 0.9 if history[-1] < avg_point else 1.1  # Trend Analysis
-    prediction = round(random.uniform(avg_point * trend_factor, avg_point * 1.5), 2)
-    
-    # Warning System
-    if prediction < 2.0:
-        return f"⚠️ *Warning:* Crash expected at {prediction}x"
-    return prediction
+    return round(random.uniform(avg_point * 0.8, avg_point * 1.5), 2)
 
 # Main Signal Logic
 def run_bot():
@@ -115,8 +108,8 @@ if __name__ == "__main__":
     requests.get(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteWebhook")
 
     # Start threads
-    threading.Thread(target=run_bot, daemon=True).start()
-    threading.Thread(target=bot.polling, kwargs={'none_stop': True, 'timeout': 20}).start()
+    threading.Thread(target=run_bot).start()
+    threading.Thread(target=bot.polling, kwargs={'allowed_updates': types.Update.MESSAGE}).start()
 
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
