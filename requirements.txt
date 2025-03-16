@@ -2,4 +2,4 @@ flask
 telebot
 requests
 gunicorn
-websocket-client
+beautifulsoup4
