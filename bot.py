@@ -24,8 +24,8 @@ user_data = {}
 def send_welcome(message):
     bot.send_message(
         message.chat.id,
-        "🚀 *Flyjet Aviator Bot is Active!*"
-"Send `/setuid <Your_UID>` to start receiving signals.",
+        "🚀 *Flyjet Aviator Bot is Active!*\n"
+        "Send `/setuid <Your_UID>` to start receiving signals.",
         parse_mode='Markdown'
     )
 
@@ -89,7 +89,10 @@ def run_bot():
                             predicted_crash = predict_crash_point(crash_history[uid][-10:])
                             signals += f"💥 **Crash Point:** {point}x | 🧠 **Prediction:** {predicted_crash}x\n"
 
-                        bot.send_message(chat_id, signals)
+                        try:
+                            bot.send_message(chat_id, signals)
+                        except Exception as e:
+                            print(f"❗ Error sending message to {chat_id}: {e}")
                 else:
                     print(f"❗ No crash point found for UID {uid}")
 
@@ -109,7 +112,7 @@ if __name__ == "__main__":
 
     # Start threads
     threading.Thread(target=run_bot).start()
-    threading.Thread(target=bot.polling, kwargs={'allowed_updates': types.Update.MESSAGE}).start()
+    threading.Thread(target=bot.polling, kwargs={'allowed_updates': ['message']}).start()
 
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
