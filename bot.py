@@ -17,7 +17,11 @@ bot = TeleBot(TELEGRAM_BOT_TOKEN)
 # Command Handler for /start
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, "🚀 *Flyjet Aviator Bot is Active!* \nStay tuned for signals!", parse_mode='Markdown')
+    bot.send_message(
+        message.chat.id,
+        "🚀 *Flyjet Aviator Bot is Active!*\nStay tuned for signals!",
+        parse_mode='Markdown'
+    )
 
 # Scraping Function
 def get_crash_point():
@@ -55,15 +59,16 @@ def run_bot():
             latest_crash_point = get_crash_point()
             if latest_crash_point:
                 crash_history.append(latest_crash_point)
+
                 if len(crash_history) >= 10:
-                    signals = ""
-                    for point in crash_history[-10:]:
-                        predicted_crash = predict_crash_point(crash_history[-10:])
+                    crash_history = crash_history[-10:]  # Maintain only the latest 10 points
+
+                    signals = "📊 *Crash Point Predictions:*\n\n"
+                    for point in crash_history:
+                        predicted_crash = predict_crash_point(crash_history)
                         signals += f"💥 **Crash Point:** {point}x | 🧠 **Prediction:** {predicted_crash}x\n"
 
-                    bot.send_message(CHAT_ID, signals)
-            else:
-                print("❗ Crash Point not found")
+                    bot.send_message(CHAT_ID, signals, parse_mode='Markdown')
 
             time.sleep(10)  # Every 10 seconds check for updates
         except Exception as e:
@@ -76,7 +81,11 @@ def home():
     return "Flyjet Aviator Bot is Running!"
 
 if __name__ == "__main__":
-    threading.Thread(target=run_bot).start()  # Web scraping parallel run karega
-    threading.Thread(target=bot.polling).start()  # Telegram bot commands ko handle karega
+    # Threading ko sahi manage karne ke liye change
+    threading.Thread(target=run_bot, daemon=True).start()  
+    threading.Thread(target=lambda: bot.infinity_polling()).start()  
+
+    # Port Configuration
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+    
