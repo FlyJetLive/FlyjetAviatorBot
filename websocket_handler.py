@@ -8,9 +8,13 @@ def connect_websocket(send_signals_to_users):
     def on_message(ws, message):
         try:
             data = json.loads(message)
-            crash_point = data.get("crash_point")  # Data extract karne ka logic
+            print("Received Data:", data)  # Debugging ke liye
+            crash_point = data.get("crash_point") or data.get("point") or data.get("value")  # Alternate keys check kar raha hai
             if crash_point:
+                print(f"✅ Crash Point Found: {crash_point}")
                 send_signals_to_users(crash_point)
+            else:
+                print("❗ Crash Point Not Found in Data")
         except Exception as e:
             print(f"Error processing WebSocket message: {e}")
 
@@ -22,8 +26,9 @@ def connect_websocket(send_signals_to_users):
         threading.Timer(5, lambda: connect_websocket(send_signals_to_users)).start()
 
     def on_open(ws):
-        print("WebSocket connection established.")
+        print("✅ WebSocket connection established.")
 
+    print("WebSocket is Connecting...")  # Debugging ke liye
     ws = websocket.WebSocketApp(
         ws_url,
         on_message=on_message,
