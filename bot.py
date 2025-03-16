@@ -3,57 +3,44 @@ from bs4 import BeautifulSoup
 from telebot import TeleBot, types
 import random
 import time
-from flask import Flask
+from flask import Flask, request
 import os
 import threading
-import json
 
 app = Flask(__name__)
 
 # Telegram Bot Setup
-TELEGRAM_BOT_TOKEN = "8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI"
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = TeleBot(TELEGRAM_BOT_TOKEN)
 
-# User Data Storage
+# User data storage for UID mapping
 user_data = {}
 
-# Save UID data to file
-def save_user_data():
-    with open("user_data.json", "w") as file:
-        json.dump(user_data, file)
-
-# Load UID data from file
-def load_user_data():
-    global user_data
-    try:
-        with open("user_data.json", "r") as file:
-            user_data = json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
-        user_data = {}
-
-# Load data at the start
-load_user_data()
-
-# /start command
+# Command Handler for /start
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, 
-                 "🚀 *Flyjet Aviator Bot is Active!* \n"
-                 "Send `/setuid <Your_UID>` to start receiving signals.", 
-                 parse_mode='Markdown')
+    bot.reply_to(
+        message,
+        "🚀 *Flyjet Aviator Bot is Active!*\n"
+        "Send `/setuid <Your_UID>` to start receiving signals.",
+        parse_mode='Markdown'
+    )
 
-# /setuid command
+# Set UID Command
 @bot.message_handler(commands=['setuid'])
 def set_uid(message):
     try:
-        uid = message.text.split()[1].strip()
+        uid = message.text.split()[1]
         user_data[message.chat.id] = uid
-        save_user_data()  # Save UID to file
-        bot.reply_to(message, f"✅ UID set successfully!\nNow you'll receive signals for UID: {uid}")
+        bot.reply_to(
+            message,
+            f"✅ UID set successfully!\nNow you'll receive signals for UID: `{uid}`",
+            parse_mode='Markdown'
+        )
     except IndexError:
-        bot.reply_to(message, "❗ Please provide a valid UID.\nExample: `/setuid 123456789`")
+        bot.reply_to(message, "❗ Please provide a valid UID. Example: `/setuid 123456`", parse_mode='Markdown')
 
-# Crash Point Scraper
+# Scraping Function
 def get_crash_point(uid):
     try:
         url = f"https://aviator-next.spribegaming.com/?user={uid}&token=31333133325F6D..."
@@ -70,7 +57,7 @@ def get_crash_point(uid):
             print(f"❗ Crash Point Not Found for UID {uid}")
             return None
     except Exception as e:
-        print(f"❌ Error for UID {uid}: {e}")
+        print(f"❌ Error during scraping for UID {uid}: {e}")
         return None
 
 # Prediction Logic
@@ -85,14 +72,14 @@ def run_bot():
     crash_history = {}
 
     while True:
-        for chat_id, uid in user_data.items():
-            try:
+        try:
+            for chat_id, uid in user_data.items():
+                if uid not in crash_history:
+                    crash_history[uid] = []
+
                 latest_crash_point = get_crash_point(uid)
                 if latest_crash_point:
-                    if uid not in crash_history:
-                        crash_history[uid] = []
                     crash_history[uid].append(latest_crash_point)
-
                     if len(crash_history[uid]) >= 10:
                         signals = ""
                         for point in crash_history[uid][-10:]:
@@ -101,12 +88,12 @@ def run_bot():
 
                         bot.send_message(chat_id, signals)
                 else:
-                    print(f"❗ Crash Point not found for UID {uid}")
-                    
-                time.sleep(10)
-            except Exception as e:
-                print(f"❌ Error: {e}")
-                time.sleep(30)
+                    print(f"❗ No crash point found for UID {uid}")
+
+            time.sleep(10)
+        except Exception as e:
+            print(f"❌ Error in bot loop: {e}")
+            time.sleep(30)
 
 # Flask Route for Render Port Issue Fix
 @app.route('/')
@@ -114,8 +101,13 @@ def home():
     return "Flyjet Aviator Bot is Running!"
 
 if __name__ == "__main__":
-    threading.Thread(target=run_bot).start()  # Web scraping parallel run karega
-    threading.Thread(target=bot.polling, kwargs={'none_stop': True}).start()  # Telegram bot commands ko handle karega
+    # Webhook Reset to Avoid Conflict
+    requests.get(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteWebhook")
+
+    # Start threads
+    threading.Thread(target=run_bot).start()
+    threading.Thread(target=bot.polling, kwargs={'allowed_updates': types.Update.MESSAGE}).start()
+
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
     
