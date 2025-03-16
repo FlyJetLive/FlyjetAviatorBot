@@ -1,42 +1,42 @@
-import requests
-from bs4 import BeautifulSoup
-from telebot import TeleBot
-import time
-import os
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import random
 
-# Telegram Bot Setup
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI")
-CHAT_ID = os.getenv("CHAT_ID", "-1002675709275")
-bot = TeleBot(TELEGRAM_BOT_TOKEN)
+# Telegram Bot Token
+BOT_TOKEN = "8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI"  # <-- Yaha apna token daalo
 
-# Aviator Signals URL
-URL = "https://damangames.bet/aviator-signal-source"  # Example URL (change if required)
+# Sample round history (example data)
+round_history = [4.31, 5.34, 1.13, 1.35, 1.14, 4.42, 589.99, 1.05, 1.17, 2.05, 1.00, 1.01, 1.00, 1.24, 6.19, 2.75]
 
-def get_crash_points():
-    response = requests.get(URL)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    crash_points = []
+# Function to generate signals
+def generate_signals():
+    signals = []
+    for _ in range(10):
+        avg = sum(round_history[-10:]) / len(round_history[-10:])
+        min_multiplier = max(1.5, avg - random.uniform(0.5, 1.0))
+        max_multiplier = min(8.0, avg + random.uniform(0.5, 2.0))
+        signals.append(f"🎯 Bet between {min_multiplier:.2f}x - {max_multiplier:.2f}x")
+    return signals
 
-    for div in soup.find_all('div', class_='crash-point-class'):  # Update class name accordingly
-        try:
-            point = float(div.text.strip().replace('x', ''))
-            crash_points.append(point)
-        except ValueError:
-            continue
+# /start command
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Welcome to Aviator Signals Bot! Type /signals to get 10 signals.")
 
-    return crash_points[:10]  # Send 10 rounds only
+# /signals command
+async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    sigs = generate_signals()
+    message = "📡 *Aviator Signals* 📡\n\n" + "\n".join([f"{i+1}. {sig}" for i, sig in enumerate(sigs)])
+    await update.message.reply_markdown(message)
 
-def send_signals():
-    while True:
-        crash_points = get_crash_points()
-        if crash_points:
-            signal_message = "\n".join([f"Round {i+1}: {point}x" for i, point in enumerate(crash_points)])
-            bot.send_message(CHAT_ID, f"📊 *Flyjet Aviator Signals* \n{signal_message}", parse_mode='Markdown')
-        else:
-            bot.send_message(CHAT_ID, "❌ No crash points found at the moment.")
+# Main function
+def main():
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-        time.sleep(10)  # Refresh interval (adjust if needed)
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("signals", signals))
 
-if __name__ == "__main__":
-    bot.send_message(CHAT_ID, "✅ *Flyjet Aviator Bot Started!* Signals incoming...", parse_mode='Markdown')
-    send_signals()
+    print("Bot is running...")
+    app.run_polling()
+
+if __name__ == '__main__':
+    main()
