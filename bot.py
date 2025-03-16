@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from telebot import TeleBot
+from telebot import TeleBot, types
 import random
 import time
 from flask import Flask
@@ -14,14 +14,17 @@ TELEGRAM_BOT_TOKEN = "8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI"
 CHAT_ID = -4669657171
 bot = TeleBot(TELEGRAM_BOT_TOKEN)
 
+# Command Handler for /start
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    bot.reply_to(message, "🚀 *Flyjet Aviator Bot is Active!* \nStay tuned for signals!", parse_mode='Markdown')
+
 # Scraping Function
 def get_crash_point():
     try:
         url = "https://aviator-next.spribegaming.com/?user=10500014800067&token=31333133325F6D..."
         headers = {"User-Agent": "Mozilla/5.0"}  # Avoid bot detection
         response = requests.get(url, headers=headers, timeout=10)
-
-        print(response.text)  # Check karo ki HTML content sahi se aa raha hai ya nahi
 
         soup = BeautifulSoup(response.text, 'html.parser')
         crash_point_element = soup.find('div', class_='crash-point')  
@@ -74,5 +77,6 @@ def home():
 
 if __name__ == "__main__":
     threading.Thread(target=run_bot).start()  # Web scraping parallel run karega
+    threading.Thread(target=bot.polling).start()  # Telegram bot commands ko handle karega
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
