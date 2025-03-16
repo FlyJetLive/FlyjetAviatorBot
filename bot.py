@@ -10,7 +10,7 @@ import threading
 app = Flask(__name__)
 
 # Telegram Bot Setup
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_BOT_TOKEN = os.getenv("8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI")
 if not TELEGRAM_BOT_TOKEN:
     raise ValueError("❗ TELEGRAM_BOT_TOKEN environment variable is missing!")
 
