@@ -35,6 +35,7 @@ def get_crash_point():
 
         if crash_point_element:
             crash_point = float(crash_point_element.text.strip().replace('x', ''))
+            print(f"✅ Crash Point Found: {crash_point}x")  # Debugging line
             return crash_point
         else:
             print("❗ Crash Point Not Found - Selector Issue")
@@ -45,7 +46,7 @@ def get_crash_point():
 
 # Prediction Logic
 def predict_crash_point(history):
-    if len(history) < 5:
+    if len(history) < 3:  # Testing ke liye limit kam kar diya hai
         return round(random.uniform(1.5, 3.0), 2)  # Random fallback for short history
     avg_point = sum(history) / len(history)
     return round(random.uniform(avg_point * 0.8, avg_point * 1.5), 2)
@@ -60,7 +61,7 @@ def run_bot():
             if latest_crash_point:
                 crash_history.append(latest_crash_point)
 
-                if len(crash_history) >= 10:
+                if len(crash_history) >= 3:  # Testing ke liye 3 points pe bhi allow kiya
                     crash_history = crash_history[-10:]  # Maintain only the latest 10 points
 
                     signals = "📊 *Crash Point Predictions:*\n\n"
