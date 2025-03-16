@@ -8,7 +8,7 @@ def connect_websocket(send_signals_to_users):
     def on_message(ws, message):
         try:
             data = json.loads(message)
-            crash_point = data.get("crash_point")  # Example data extraction logic
+            crash_point = data.get("crash_point")  # Data extract karne ka logic
             if crash_point:
                 send_signals_to_users(crash_point)
         except Exception as e:
@@ -31,4 +31,3 @@ def connect_websocket(send_signals_to_users):
         on_close=on_close
     )
     ws.run_forever()
-
