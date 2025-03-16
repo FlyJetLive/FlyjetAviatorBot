@@ -71,9 +71,6 @@ if __name__ == "__main__":
     import requests
     requests.get(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteWebhook")
 
-    # Set New Webhook
-    requests.get(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/setWebhook?url=https://flyjet-aviator.onrender.com/{TELEGRAM_BOT_TOKEN}")
-
     # Start WebSocket in Thread
     threading.Thread(target=lambda: connect_websocket(send_signals_to_users)).start()
 
