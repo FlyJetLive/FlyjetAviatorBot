@@ -68,6 +68,8 @@ def home():
     return "Flyjet Aviator Bot is Running!"
 
 if __name__ == "__main__":
+    print("Bot Token:", TELEGRAM_BOT_TOKEN)  # Is line ko temporarily add karo
+    
     # Delete Old Webhook Before Starting New One
     import requests
     requests.get(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteWebhook")
