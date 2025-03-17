@@ -2,13 +2,10 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import random
 
-# Telegram Bot Token
-BOT_TOKEN = "8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI"  # <-- Yaha apna token daalo
+BOT_TOKEN = "8162063342:AAGxQN9hq_M5xTvuRcBt0ONtqCZLkgbXeBI"
 
-# Sample round history (example data)
 round_history = [4.31, 5.34, 1.13, 1.35, 1.14, 4.42, 589.99, 1.05, 1.17, 2.05, 1.00, 1.01, 1.00, 1.24, 6.19, 2.75]
 
-# Function to generate signals
 def generate_signals():
     signals = []
     for _ in range(10):
@@ -18,17 +15,18 @@ def generate_signals():
         signals.append(f"🎯 Bet between {min_multiplier:.2f}x - {max_multiplier:.2f}x")
     return signals
 
-# /start command
+# Handle /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Welcome to Aviator Signals Bot! Type /signals to get 10 signals.")
+    chat_id = update.effective_chat.id  # <-- Yeh user ka chat ID hai
+    await context.bot.send_message(chat_id=chat_id, text="Welcome to Aviator Signals Bot! Type /signals to get signals.")
 
-# /signals command
+# Handle /signals
 async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id  # <-- Yeh user ka chat ID hai
     sigs = generate_signals()
     message = "📡 *Aviator Signals* 📡\n\n" + "\n".join([f"{i+1}. {sig}" for i, sig in enumerate(sigs)])
-    await update.message.reply_markdown(message)
+    await context.bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
 
-# Main function
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
